@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyRush | Telegram WebApp</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-black: #000000;
+            --card-gray: #121212;
+            --input-gray: #1e1e1e;
+            --text-main: #ffffff;
+            --text-dim: #999999;
+            --green: #00e676;
+            --red: #ff5252;
+            --accent: #fcd535;
+            --btn-dark: #2a2a2a;
+        }
+
+        body {
+            background-color: var(--bg-black);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            user-select: none;
+        }
+
+        .header-stats {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+        .stat-label { color: var(--text-dim); margin-bottom: 2px; }
+        .stat-val-green { color: var(--green); font-weight: bold; font-size: 15px; }
+
+        #main-card {
+            width: 100%;
+            max-width: 400px;
+            background: var(--card-gray);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        #multi-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 60px;
+            font-weight: 800;
+            z-index: 10;
+            pointer-events: none;
+            text-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        canvas { width: 100%; height: 300px; display: block; }
+
+        .control-panel, .info-section {
+            width: 100%;
+            max-width: 400px;
+            background: var(--card-gray);
+            margin-top: 10px;
+            border-radius: 12px;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        .tab-btn {
+            background: var(--btn-dark);
+            color: var(--text-dim);
+            border: none;
+            padding: 6px 15px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+
+        .input-group { margin-bottom: 15px; }
+        .input-label { font-size: 12px; color: var(--text-dim); margin-bottom: 6px; }
+        
+        .input-row {
+            display: flex;
+            gap: 8px;
+            background: var(--input-gray);
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        input {
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 10px;
+            flex-grow: 1;
+            font-size: 16px;
+            outline: none;
+            text-align: center;
+        }
+
+        .mod-btn {
+            background: var(--btn-dark);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        #action-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--green);
+            color: black;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        #action-btn:active { transform: scale(0.98); }
+        #action-btn:disabled { opacity: 0.5; }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-top: 15px;
+            color: var(--text-dim);
+        }
+        .dot { height: 8px; width: 8px; background: var(--green); border-radius: 50%; display: inline-block; margin-right: 5px; }
+
+        .history-section { margin-top: 15px; width: 100%; max-width: 400px; }
+        .section-title { font-size: 14px; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        
+        .history-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+        .hist-chip {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .live-cashouts {
+            margin-top: 10px;
+            padding: 20px;
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-stats">
+        <div>
+            <div class="stat-label">Session Profit</div>
+            <div class="stat-val-green" id="session-profit">+0.00 Pd</div>
+        </div>
+        <div style="text-align: right;">
+            <div class="stat-label">Balance</div>
+            <div class="stat-val-green" id="balance">0.00 Pd</div>
+        </div>
+    </div>
+
+    <div id="main-card">
+        <div id="multi-display">1.00x</div>
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <div class="control-panel">
+        <button class="tab-btn">Manual</button>
+        
+        <div class="input-group">
+            <div class="input-label">Bet Amount</div>
+            <div class="input-row">
+                <input type="number" id="bet-input" value="1000" min="1000">
+                <button class="mod-btn" onclick="modifyBet(0.5)">½</button>
+                <button class="mod-btn" onclick="modifyBet(2)">2x</button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <div class="input-label">Cashout Multiplier</div>
+            <div class="input-row">
+                <input type="number" id="auto-input" value="2.00" step="0.1">
+                <button class="mod-btn" onclick="modifyAuto(-0.1)">▼</button>
+                <button class="mod-btn" onclick="modifyAuto(0.1)">▲</button>
+            </div>
+        </div>
+
+        <button id="action-btn">Bet for Next Round</button>
+
+        <div class="status-row">
+            <div>Total Bets: <span style="color:white">0 (0 Pd)</span></div>
+            <div><span class="dot"></span>Connected</div>
+        </div>
+    </div>
+
+    <div class="info-section history-section">
+        <div class="section-title">
+            Recent Games
+            <span style="color:var(--green)" id="total-profit-info">+0.00 Pd</span>
+        </div>
+        <div class="history-grid" id="history-grid"></div>
+    </div>
+
+    <div class="info-section">
+        <div class="section-title">Live Cashouts <span style="background:#2a2a2a; padding: 2px 6px; border-radius: 4px; font-size:10px">0</span></div>
+        <div class="live-cashouts">No cashouts yet this round</div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // CONFIGURATION: Replace this with your actual Flask Server IP/URL
+        const API_URL = "http://YOUR_VPS_IP:5000"; 
+        const USER_ID = tg.initDataUnsafe.user?.id || 7124832846;
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const multiDisplay = document.getElementById('multi-display');
+        const balanceDisplay = document.getElementById('balance');
+        const actionBtn = document.getElementById('action-btn');
+        const historyGrid = document.getElementById('history-grid');
+
+        canvas.width = 800; canvas.height = 600;
+
+        let balance = 0, profit = 0, currentBet = 0, multiplier = 1.00;
+        let isRunning = false, hasCashedOut = false, crashPoint = 0, startTime = 0;
+
+        // Sound Synthesis
+        const AudioFX = {
+            ctx: null,
+            init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+            playEngine(m) {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const g = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(40 + (m * 5), this.ctx.currentTime);
+                g.gain.setValueAtTime(0.015, this.ctx.currentTime);
+                osc.connect(g); g.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.1);
+            },
+            playCrash() {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const g = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(80, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(1, this.ctx.currentTime + 0.5);
+                g.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.5);
+                osc.connect(g); g.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.5);
+            }
+        };
+
+        // API Syncing
+        async function syncWithDB(amount) {
+            try {
+                const response = await fetch(`${API_URL}/sync`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ user_id: USER_ID, amount: amount })
+                });
+                const data = await response.json();
+                balance = data.balance;
+                updateUI();
+            } catch (e) { console.error("API Error", e); }
+        }
+
+        // Initialize Balance
+        syncWithDB(0);
+
+        function modifyBet(factor) {
+            const input = document.getElementById('bet-input');
+            input.value = Math.max(1000, Math.floor(parseFloat(input.value) * factor));
+        }
+
+        function modifyAuto(val) {
+            const input = document.getElementById('auto-input');
+            input.value = (parseFloat(input.value) + val).toFixed(1);
+        }
+
+        actionBtn.addEventListener('click', () => {
+            if (isRunning) {
+                if (!hasCashedOut) cashOutManual();
+            } else {
+                startRound();
+            }
+        });
+
+        function startRound() {
+            const bet = parseFloat(document.getElementById('bet-input').value);
+            if (bet > balance || bet < 1000) return tg.HapticFeedback.notificationOccurred('error');
+
+            syncWithDB(-bet);
+            currentBet = bet;
+            
+            isRunning = true;
+            hasCashedOut = false;
+            multiplier = 1.00;
+            startTime = Date.now();
+            crashPoint = (1.05 / (Math.random() * 0.95 + 0.01)).toFixed(2);
+
+            actionBtn.innerText = "CASH OUT";
+            actionBtn.style.background = getComputedStyle(document.documentElement).getPropertyValue('--accent');
+            tg.HapticFeedback.impactOccurred('medium');
+            requestAnimationFrame(gameLoop);
+        }
+
+        function cashOutManual() {
+            if (hasCashedOut || !isRunning) return;
+            hasCashedOut = true;
+            const win = currentBet * multiplier;
+            syncWithDB(win);
+            profit += (win - currentBet);
+            actionBtn.innerText = "CASHED OUT";
+            actionBtn.disabled = true;
+            tg.HapticFeedback.notificationOccurred('success');
+        }
+
+        function updateUI() {
+            balanceDisplay.innerText = `${balance.toFixed(2)} Pd`;
+            const profitEl = document.getElementById('session-profit');
+            profitEl.innerText = `${profit >= 0 ? '+' : ''}${profit.toFixed(2)} Pd`;
+            document.getElementById('total-profit-info').innerText = `${profit >= 0 ? '+' : ''}${profit.toFixed(2)} Pd`;
+        }
+
+        function gameLoop() {
+            if (!isRunning) return;
+            const t = (Date.now() - startTime) / 1000;
+            multiplier = Math.pow(1.09, t * 4);
+
+            const autoLimit = parseFloat(document.getElementById('auto-input').value);
+            if (!hasCashedOut && multiplier >= autoLimit) cashOutManual();
+
+            if (multiplier >= crashPoint) {
+                endRound(); return;
+            }
+
+            multiDisplay.innerText = multiplier.toFixed(2) + 'x';
+            AudioFX.playEngine(multiplier);
+            render(t);
+            requestAnimationFrame(gameLoop);
+        }
+
+        function render(t) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const px = t * 150;
+            const py = canvas.height - (Math.pow(t, 1.8) * 40);
+            
+            ctx.fillStyle = "rgba(0, 230, 118, 0.15)";
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+            ctx.lineTo(px, py);
+            ctx.lineTo(px, canvas.height);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.strokeStyle = "#00e676";
+            ctx.lineWidth = 8;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+            ctx.lineTo(px, py);
+            ctx.stroke();
+        }
+
+        function endRound() {
+            isRunning = false;
+            AudioFX.playCrash();
+            multiDisplay.innerText = "x" + parseFloat(crashPoint).toFixed(2);
+            multiDisplay.style.color = "#ff5252";
+
+            const chip = document.createElement('div');
+            chip.className = 'hist-chip';
+            chip.style.background = (crashPoint >= 2) ? '#00e67622' : '#ff525222';
+            chip.style.color = (crashPoint >= 2) ? '#00e676' : '#ff5252';
+            chip.innerText = `x${parseFloat(crashPoint).toFixed(2)}`;
+            historyGrid.prepend(chip);
+
+            setTimeout(() => {
+                actionBtn.innerText = "Bet for Next Round";
+                actionBtn.style.background = "#00e676";
+                actionBtn.disabled = false;
+                multiDisplay.style.color = "white";
+                multiDisplay.innerText = "1.00x";
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
