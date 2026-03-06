@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyRush | Pro</title>
+    <style>
+        :root {
+            --bg-black: #000000;
+            --card-gray: #121212;
+            --input-gray: #1e1e1e;
+            --text-main: #ffffff;
+            --text-dim: #999999;
+            --green: #00e676;
+            --red: #ff5252;
+            --accent: #fcd535;
+        }
+
+        body {
+            background-color: var(--bg-black);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .header-stats {
+            width: 400px;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .stat-label { color: var(--text-dim); margin-bottom: 4px; }
+        .stat-val-green { color: var(--green); font-weight: bold; }
+
+        #main-card {
+            width: 400px;
+            background: var(--card-gray);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #multi-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 64px;
+            font-weight: 800;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        canvas {
+            width: 100%;
+            height: 300px;
+            display: block;
+        }
+
+        .control-panel {
+            width: 360px;
+            background: var(--card-gray);
+            margin-top: 15px;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .input-group { margin-bottom: 20px; }
+        .input-label { font-size: 12px; color: var(--text-dim); margin-bottom: 8px; }
+        
+        .input-row {
+            display: flex;
+            gap: 8px;
+            background: var(--input-gray);
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        input {
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 10px;
+            flex-grow: 1;
+            font-size: 16px;
+            outline: none;
+            text-align: center;
+        }
+
+        .mod-btn {
+            background: #2a2a2a;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        #action-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--green);
+            color: black;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .history-grid {
+            width: 400px;
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .hist-chip {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-stats">
+        <div>
+            <div class="stat-label">Session Profit</div>
+            <div class="stat-val-green" id="session-profit">+0.00 Pd</div>
+        </div>
+        <div style="text-align: right;">
+            <div class="stat-label">Balance</div>
+            <div class="stat-val-green" id="balance">1000.00 Pd</div>
+        </div>
+    </div>
+
+    <div id="main-card">
+        <div id="multi-display">1.00x</div>
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <div class="control-panel">
+        <div class="input-group">
+            <div class="input-label">Bet Amount</div>
+            <div class="input-row">
+                <input type="number" id="bet-input" value="10">
+                <button class="mod-btn" onclick="modifyBet(0.5)">½</button>
+                <button class="mod-btn" onclick="modifyBet(2)">2x</button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <div class="input-label">Cashout Multiplier</div>
+            <div class="input-row">
+                <input type="number" id="auto-input" value="2.00" step="0.1">
+            </div>
+        </div>
+
+        <button id="action-btn">Bet for Next Round</button>
+    </div>
+
+    <div class="history-grid" id="history-grid"></div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const multiDisplay = document.getElementById('multi-display');
+        const balanceDisplay = document.getElementById('balance');
+        const actionBtn = document.getElementById('action-btn');
+        const historyGrid = document.getElementById('history-grid');
+
+        canvas.width = 800; canvas.height = 600;
+
+        let balance = 1000.00, profit = 0.00, currentBet = 0, multiplier = 1.00;
+        let isRunning = false, hasCashedOut = false, crashPoint = 0, startTime = 0;
+
+        const AudioFX = {
+            ctx: null,
+            init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+            playEngine(m) {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const g = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(40 + (m * 5), this.ctx.currentTime);
+                g.gain.setValueAtTime(0.02, this.ctx.currentTime);
+                osc.connect(g); g.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.1);
+            },
+            playCrash() {
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const g = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(80, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(1, this.ctx.currentTime + 0.5);
+                g.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.5);
+                osc.connect(g); g.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.5);
+            }
+        };
+
+        function modifyBet(factor) {
+            const input = document.getElementById('bet-input');
+            input.value = (parseFloat(input.value) * factor).toFixed(2);
+        }
+
+        actionBtn.addEventListener('click', () => {
+            if (isRunning) {
+                if (!hasCashedOut) cashOutManual();
+            } else {
+                startRound();
+            }
+        });
+
+        function startRound() {
+            const bet = parseFloat(document.getElementById('bet-input').value);
+            if (bet > balance || bet <= 0) return;
+
+            balance -= bet;
+            currentBet = bet;
+            updateUI();
+
+            isRunning = true;
+            hasCashedOut = false;
+            multiplier = 1.00;
+            startTime = Date.now();
+            crashPoint = (1 / (Math.random() * 0.98 + 0.01)).toFixed(2);
+
+            actionBtn.innerText = "CASH OUT";
+            actionBtn.style.background = varProp('--accent');
+            requestAnimationFrame(gameLoop);
+        }
+
+        function cashOutManual() {
+            if (hasCashedOut || !isRunning) return;
+            hasCashedOut = true;
+            const win = currentBet * multiplier;
+            balance += win;
+            profit += (win - currentBet);
+            updateUI();
+            actionBtn.innerText = "CASHED OUT";
+            actionBtn.disabled = true;
+        }
+
+        // Updated for Pd Currency as a SUFFIX
+        function updateUI() {
+            balanceDisplay.innerText = `${balance.toFixed(2)} Pd`;
+            document.getElementById('session-profit').innerText = `${profit >= 0 ? '+' : ''}${profit.toFixed(2)} Pd`;
+        }
+
+        function gameLoop() {
+            if (!isRunning) return;
+            const t = (Date.now() - startTime) / 1000;
+            multiplier = Math.pow(1.09, t * 4);
+
+            const autoLimit = parseFloat(document.getElementById('auto-input').value);
+            if (!hasCashedOut && multiplier >= autoLimit) {
+                cashOutManual();
+            }
+
+            if (multiplier >= crashPoint) {
+                endRound(); return;
+            }
+
+            multiDisplay.innerText = multiplier.toFixed(2) + 'x';
+            AudioFX.playEngine(multiplier);
+            render(t);
+            requestAnimationFrame(gameLoop);
+        }
+
+        function render(t) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const px = t * 150;
+            const py = canvas.height - (Math.pow(t, 1.8) * 40);
+            
+            ctx.fillStyle = "rgba(0, 230, 118, 0.1)";
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+            ctx.lineTo(px, py);
+            ctx.lineTo(px, canvas.height);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.strokeStyle = varProp('--green').trim();
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+            ctx.lineTo(px, py);
+            ctx.stroke();
+        }
+
+        function varProp(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name);
+        }
+
+        function endRound() {
+            isRunning = false;
+            AudioFX.playCrash();
+            multiDisplay.innerText = "x" + parseFloat(crashPoint).toFixed(2);
+            multiDisplay.style.color = varProp('--red');
+
+            const chip = document.createElement('div');
+            chip.className = 'hist-chip';
+            chip.style.background = (crashPoint >= 2) ? '#00e67622' : '#ff525222';
+            chip.style.color = (crashPoint >= 2) ? varProp('--green') : varProp('--red');
+            chip.innerText = `x${parseFloat(crashPoint).toFixed(2)}`;
+            historyGrid.prepend(chip);
+
+            setTimeout(() => {
+                actionBtn.innerText = "Bet for Next Round";
+                actionBtn.style.background = varProp('--green');
+                actionBtn.disabled = false;
+                multiDisplay.style.color = "white";
+                multiDisplay.innerText = "1.00x";
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
