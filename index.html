@@ -5,19 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PokéCasino Random Battle</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap');
+
         :root {
-            --bg-color: #000;
-            --panel-bg: #e0e0e0;
-            --border-color: #444;
-            --hp-green: #2ecc71;
+            --bg: #0f172a;
+            --card: rgba(255, 255, 255, 0.08);
+            --border: rgba(255,255,255,0.1);
+            --accent: #6366f1;
+            --accent2: #22c55e;
+            --text: #e5e7eb;
+            --hp-green: #22c55e;
             --hp-yellow: #f1c40f;
             --hp-red: #e74c3c;
-            --font-main: 'Courier New', Courier, monospace;
         }
 
         body {
-            font-family: var(--font-main);
-            background-color: var(--bg-color);
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at top, #1e293b, #020617);
             margin: 0;
             display: flex;
             justify-content: center;
@@ -27,122 +31,150 @@
             touch-action: manipulation;
         }
 
+        /* Container */
         #game-container {
             width: 100%;
-            max-width: 500px;
+            max-width: 420px;
             height: 100%;
-            background: white;
-            position: relative;
             display: flex;
             flex-direction: column;
-            border: 2px solid #333;
+            backdrop-filter: blur(20px);
+            position: relative;
+            border: 1px solid var(--border);
         }
 
-        /* --- SCREENS --- */
+        /* Screens */
         #start-screen, #result-screen {
             position: absolute;
             inset: 0;
-            background: #222;
-            color: white;
-            z-index: 100;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(25px);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            gap: 15px;
+            z-index: 100;
             text-align: center;
             padding: 20px;
         }
 
-        .btn-main {
-            padding: 15px 30px;
-            font-size: 18px;
-            background: #f1c40f;
-            color: #000;
-            border: 4px solid #000;
-            cursor: pointer;
-            font-weight: bold;
-            text-transform: uppercase;
+        /* Title */
+        h1 {
+            font-size: 38px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #6366f1, #22c55e);
+            -webkit-background-clip: text;
+            color: transparent;
+            margin: 0;
         }
 
-        /* --- BATTLE FIELD --- */
+        /* Buttons */
+        .btn-main {
+            padding: 14px 28px;
+            border-radius: 14px;
+            border: none;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+            width: 80%;
+        }
+
+        .btn-main:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, #f1c40f, #d35400);
+        }
+
+        /* Battlefield */
         #battle-field {
             flex: 1.2;
-            background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 100%);
-            background-image: url('https://i.postimg.cc/5thgc5b5/IMG-20260326-190251-371.jpg'); /* Updated to use the public URL */
-            background-size: cover;
-            background-position: bottom;
             position: relative;
+            background: url('https://i.postimg.cc/5thgc5b5/IMG-20260326-190251-371.jpg') center/cover;
             overflow: hidden;
             display: none;
         }
 
+        /* Pokemon slots */
         .pokemon-slot {
             position: absolute;
-            width: 160px;
+            width: 130px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            transition: transform 0.3s ease-out;
         }
 
-        #opponent-active { 
-            top: 15%; 
-            right: 5%; 
-        }
-
-        #player-active { 
-            bottom: 5%; 
-            left: 5%; 
-        }
+        #opponent-active { top: 10%; right: 5%; }
+        #player-active { bottom: 5%; left: 5%; }
 
         .pkmn-img { 
-            width: 140px; 
-            height: 140px; 
+            width: 120px; 
+            height: 120px; 
             image-rendering: pixelated; 
             object-fit: contain;
+            filter: drop-shadow(0 0 10px rgba(99,102,241,0.6));
         }
-        
+
+        /* Glass card */
         .status-bar {
-            background: #fffdf0;
-            border: 3px solid #444;
-            border-bottom-left-radius: 15px;
-            border-top-right-radius: 15px;
-            padding: 6px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 8px;
+            border-radius: 14px;
+            color: var(--text);
+            margin-top: 6px;
             width: 140px;
-            box-shadow: 3px 3px 0px rgba(0,0,0,0.2);
+            /* Fix for blur removal during animations */
+            transform: translateZ(0);
+            will-change: backdrop-filter;
         }
 
-        .name-row { font-size: 14px; font-weight: bold; margin-bottom: 2px; display: flex; justify-content: space-between;}
+        .name-row { font-size: 12px; font-weight: bold; margin-bottom: 4px; display: flex; justify-content: space-between;}
 
+        /* HP Bar */
         .hp-container {
-            background: #444;
+            background: #1f2933;
             height: 8px;
-            border: 1px solid #000;
-            border-radius: 4px;
+            border-radius: 10px;
             overflow: hidden;
         }
 
         .hp-bar {
             height: 100%;
+            border-radius: 10px;
+            background: linear-gradient(90deg, #22c55e, #4ade80);
             width: 100%;
-            background: var(--hp-green);
-            transition: width 0.4s ease-out;
+            transition: width 0.5s ease, background 0.3s;
         }
 
-        /* --- UI PANEL --- */
+        /* UI panel */
         #ui-panel {
             flex: 0.8;
-            background: var(--panel-bg);
-            border-top: 4px solid #333;
+            background: rgba(2, 6, 23, 0.9);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid var(--border);
             display: flex;
             flex-direction: column;
         }
 
+        /* Log */
         #log {
-            padding: 12px;
-            background: #fff;
-            border: 2px solid #888;
-            margin: 8px;
-            font-size: 14px;
+            margin: 10px;
+            padding: 10px;
+            border-radius: 12px;
+            background: var(--card);
+            color: var(--text);
+            font-size: 13px;
             height: 60px;
             overflow-y: auto;
             flex-shrink: 0;
@@ -156,41 +188,105 @@
             flex: 1;
         }
 
-        .move-btn {
-            background: #f8f8f8;
-            border: 3px solid #555;
-            border-radius: 8px;
-            font-family: var(--font-main);
-            font-size: 13px;
-            font-weight: bold;
+        #switch-menu {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            padding: 0 8px 8px 8px;
+            flex: 1;
+        }
+
+        /* Move buttons */
+        .move-btn, .switch-btn {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            color: var(--text);
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            padding: 10px;
+            transition: 0.2s;
             cursor: pointer;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            box-shadow: inset -2px -2px 0px #bbb;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+            position: relative;
+            overflow: hidden;
         }
 
-        .move-btn:active { transform: translateY(2px); box-shadow: none; }
+        .move-btn:hover {
+            transform: translateY(-2px);
+        }
 
-        .type-tag { font-size: 9px; text-transform: uppercase; color: #666; }
+        .switch-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .type-tag { font-size: 9px; text-transform: uppercase; opacity: 0.7; margin-top: 2px; }
 
         .hidden { display: none !important; }
 
-        /* Damage Popups */
+        /* Ripple Effect */
+        .ripple {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.4);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            border-radius: 50%;
+            animation: ripple-animation 0.6s linear;
+        }
+
+        @keyframes ripple-animation {
+            from { width: 0; height: 0; opacity: 0.5; }
+            to { width: 400px; height: 400px; opacity: 0; }
+        }
+
+        /* Damage popup */
         .damage-popup {
             position: absolute;
-            color: #e74c3c;
+            font-size: 20px;
             font-weight: bold;
-            font-size: 22px;
-            text-shadow: 2px 2px 0px white;
+            color: #ef4444;
+            text-shadow: 1px 1px 0px black;
             z-index: 10;
-            animation: floatUp 0.8s ease-out forwards;
+            animation: floatUp 0.8s forwards;
+        }
+
+        /* Particle Element */
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            border-radius: 50%;
+            z-index: 5;
+        }
+
+        /* Move Animations */
+        .atk-tackle-player { animation: tacklePlayer 0.4s ease-in-out; }
+        .atk-tackle-opp { animation: tackleOpp 0.4s ease-in-out; }
+        
+        @keyframes tacklePlayer {
+            0% { transform: translate(0, 0); }
+            50% { transform: translate(40px, -40px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        @keyframes tackleOpp {
+            0% { transform: translate(0, 0); }
+            50% { transform: translate(-40px, 40px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        .atk-special { animation: specialFlash 0.5s ease-out; }
+        @keyframes specialFlash {
+            0% { filter: brightness(1) saturate(1); }
+            50% { filter: brightness(2) saturate(2) drop-shadow(0 0 20px white); }
+            100% { filter: brightness(1) saturate(1); }
         }
 
         @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-40px); }
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-40px); }
         }
 
         @keyframes shake {
@@ -198,16 +294,25 @@
             20%, 60% { transform: translateX(-8px); }
             40%, 80% { transform: translateX(8px); }
         }
+
+        .title-animate { animation: pulse 2s infinite ease-in-out; }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
 
 <div id="game-container">
     <div id="start-screen">
-        <h1 style="color: #f1c40f; -webkit-text-stroke: 1px black;">POKÉCASINO</h1>
-        <p>RANDOM PIXEL BATTLE</p>
-        <button id="btn-start" class="btn-main">Fight!</button>
-        <p id="loading-msg" class="hidden">Summoning Pokémon...</p>
+        <h1 class="title-animate">PokéCasino</h1>
+        <p style="opacity:0.6;">Select Your Battle Mode</p>
+        <button id="btn-start-normal" class="btn-main">Non-Legendary</button>
+        <button id="btn-start-legendary" class="btn-main btn-gold">Legendary Mode</button>
+        <p id="loading-msg" class="hidden" style="color: #6366f1; font-weight: bold;">Summoning Pokémon...</p>
+        <p style="position: absolute; bottom: 20px; font-size: 10px; color: #666;">© 2026 POKÉCASINO ENGINE</p>
     </div>
 
     <div id="battle-field">
@@ -237,10 +342,13 @@
             <button class="move-btn" id="move-2"></button>
             <button class="move-btn" id="move-3"></button>
         </div>
+        <div id="switch-menu" class="hidden">
+            </div>
     </div>
 
     <div id="result-screen" class="hidden">
         <h1 id="result-title"></h1>
+        <p id="result-subtitle" style="margin-bottom: 30px; font-weight: bold; color: white;"></p>
         <button onclick="location.reload()" class="btn-main">New Battle</button>
     </div>
 </div>
@@ -249,40 +357,102 @@
     const state = {
         playerTeam: [], aiTeam: [],
         playerIdx: 0, aiIdx: 0,
-        busy: false
+        busy: false,
+        mustSwitch: false,
+        mode: 'normal' // 'normal' or 'legendary'
     };
 
     const sounds = {
         hit: new Audio('https://raw.githubusercontent.com/Arunanshu99/Pokemon-Game/master/assets/audio/damage.mp3'),
-        // Fixed: Use raw.githubusercontent.com for the direct audio file link
         faint: new Audio('https://raw.githubusercontent.com/zeeldholakiya9-web/PokeCasino/3c33080641d4ef1d56ad4cf9c46acc1a47c42ebe/Ruby_0010.wav'),
         button: new Audio('https://raw.githubusercontent.com/Arunanshu99/Pokemon-Game/master/assets/audio/button-click.mp3'),
         battleMusic: new Audio('https://raw.githubusercontent.com/zeeldholakiya9-web/PokeCasino/f4672f02c44b9b9453c1c176a8ecdeb9f2dac0d6/1-26.%20Battle!%20(Trainer%20Battle).mp3'),
         victoryMusic: new Audio('https://raw.githubusercontent.com/zeeldholakiya9-web/PokeCasino/f4672f02c44b9b9453c1c176a8ecdeb9f2dac0d6/1-27.%20Victory!%20(Trainer%20Battle).mp3')
     };
 
-    // Configure loop for battle music
     sounds.battleMusic.loop = true;
 
-    async function init() {
-        // Chrome fix: Resume audio context or play a silent sound to "unlock" audio on first click
-        Object.values(sounds).forEach(s => {
-            s.play().then(() => {
-                s.pause();
-                s.currentTime = 0;
-            }).catch(() => {});
-        });
+    // Particle System for move animations
+    const ParticleSystem = {
+        colors: {
+            fire: '#ff4400', water: '#3498db', grass: '#2ecc71', electric: '#f1c40f',
+            psychic: '#9b59b6', ice: '#aed6f1', dragon: '#17202a', normal: '#bdc3c7'
+        },
+        spawn(x, y, type, color) {
+            const count = 12;
+            const container = document.getElementById('battle-field');
+            for(let i=0; i<count; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                const c = this.colors[color] || '#ffffff';
+                
+                const size = Math.random() * 6 + 4;
+                p.style.width = size + 'px';
+                p.style.height = size + 'px';
+                p.style.background = c;
+                p.style.left = x + 'px';
+                p.style.top = y + 'px';
+                p.style.boxShadow = `0 0 10px ${c}`;
+                
+                container.appendChild(p);
 
-        document.getElementById('btn-start').classList.add('hidden');
+                const angle = Math.random() * Math.PI * 2;
+                const velocity = Math.random() * 8 + 4;
+                const vx = Math.cos(angle) * velocity;
+                const vy = Math.sin(angle) * velocity;
+
+                let op = 1;
+                const animate = () => {
+                    const curX = parseFloat(p.style.left);
+                    const curY = parseFloat(p.style.top);
+                    p.style.left = (curX + vx) + 'px';
+                    p.style.top = (curY + vy) + 'px';
+                    op -= 0.04;
+                    p.style.opacity = op;
+                    if(op > 0) requestAnimationFrame(animate);
+                    else p.remove();
+                };
+                requestAnimationFrame(animate);
+            }
+        }
+    };
+
+    // Ripple effect function
+    function createRipple(event) {
+        const button = event.currentTarget;
+        const circle = document.createElement("span");
+        const diameter = Math.max(button.clientWidth, button.clientHeight);
+        const radius = diameter / 2;
+
+        circle.style.width = circle.style.height = `${diameter}px`;
+        circle.style.left = `${event.clientX - button.getBoundingClientRect().left}px`;
+        circle.style.top = `${event.clientY - button.getBoundingClientRect().top}px`;
+        circle.classList.add("ripple");
+
+        const ripple = button.getElementsByClassName("ripple")[0];
+        if (ripple) { ripple.remove(); }
+        button.appendChild(circle);
+    }
+
+    async function init(mode) {
+        state.mode = mode;
+        for (let s in sounds) {
+            sounds[s].play().then(() => {
+                sounds[s].pause();
+                sounds[s].currentTime = 0;
+            }).catch(() => {});
+        }
+
+        document.getElementById('btn-start-normal').classList.add('hidden');
+        document.getElementById('btn-start-legendary').classList.add('hidden');
         document.getElementById('loading-msg').classList.remove('hidden');
         
-        state.playerTeam = await getTeam(true);  // true for back sprites
-        state.aiTeam = await getTeam(false); // false for front sprites
+        state.playerTeam = await getTeam(true);
+        state.aiTeam = await getTeam(false);
         
         document.getElementById('start-screen').classList.add('hidden');
         document.getElementById('battle-field').style.display = 'block';
 
-        // Play battle music with reduced volume
         sounds.battleMusic.volume = 0.3;
         sounds.battleMusic.play().catch(e => console.log("Music play error:", e));
         
@@ -292,27 +462,59 @@
 
     async function getTeam(isPlayer) {
         const team = [];
-        for(let i=0; i<6; i++) {
-            const id = Math.floor(Math.random() * 649) + 1; // Limit to Gen 5 for best pixel art
+        while(team.length < 6) {
+            const id = Math.floor(Math.random() * 649) + 1;
+            
+            const speciesRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`);
+            const speciesData = await speciesRes.json();
+            
+            const isLegendary = speciesData.is_legendary || speciesData.is_mythical;
+            
+            // Filter based on mode
+            if (state.mode === 'legendary' && !isLegendary) continue;
+            if (state.mode === 'normal' && isLegendary) continue;
+
             const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
             const data = await res.json();
             
             const hp = data.stats[0].base_stat * 2 + 110;
+            let spriteName = data.name.toLowerCase();
+            if (spriteName.includes('-')) {
+                spriteName = spriteName.split('-')[0];
+            }
+
+            // Fetch move details
+            const moveList = [];
+            const movePromises = data.moves
+                .sort(() => 0.5 - Math.random())
+                .slice(0, 15)
+                .map(m => fetch(m.move.url).then(r => r.json()));
+            
+            const moveDetails = await Promise.all(movePromises);
+            const filteredMoves = moveDetails.filter(m => m.power !== null).slice(0, 4);
+            
+            filteredMoves.forEach(m => {
+                moveList.push({
+                    name: m.name.toUpperCase().replace('-', ' '),
+                    power: m.power || 40,
+                    type: m.type.name
+                });
+            });
+
+            while(moveList.length < 4) {
+                moveList.push({ name: 'TACKLE', power: 40, type: 'normal' });
+            }
+
             team.push({
                 name: data.name.toUpperCase(),
                 maxHp: hp, hp: hp,
                 atk: data.stats[1].base_stat, def: data.stats[2].base_stat, spd: data.stats[5].base_stat,
                 types: data.types.map(t => t.type.name),
-                // Use Back sprites for player, Front for AI
                 img: isPlayer 
-                  ? `https://play.pokemonshowdown.com/sprites/ani-back/${data.name}.gif`
-                  : `https://play.pokemonshowdown.com/sprites/ani/${data.name}.gif`,
-                moves: [
-                    { name: 'Tackle', power: 40, type: 'normal' },
-                    { name: 'Swift', power: 60, type: 'normal' },
-                    { name: 'Strike', power: 75, type: data.types[0].type.name },
-                    { name: 'Ultimate', power: 110, type: data.types[0].type.name }
-                ]
+                  ? `https://play.pokemonshowdown.com/sprites/ani-back/${spriteName}.gif`
+                  : `https://play.pokemonshowdown.com/sprites/ani/${spriteName}.gif`,
+                frontImg: `https://play.pokemonshowdown.com/sprites/ani/${spriteName}.gif`,
+                moves: moveList
             });
         }
         return team;
@@ -322,26 +524,77 @@
         const p = state.playerTeam[state.playerIdx];
         const a = state.aiTeam[state.aiIdx];
 
-        // Player UI
         document.getElementById('player-name').innerText = p.name;
         document.getElementById('player-hp-num').innerText = `${Math.ceil(p.hp)}/${p.maxHp}`;
-        document.getElementById('player-img').src = p.img;
+        
+        const playerImg = document.getElementById('player-img');
+        if (playerImg.src !== p.img) {
+            playerImg.src = p.img;
+            playerImg.onerror = function() { 
+                this.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${Math.floor(Math.random()*150)+1}.png`; 
+            };
+        }
+
         updateHPBar('player-hp-bar', p.hp, p.maxHp);
         
-        // AI UI
         document.getElementById('opp-name').innerText = a.name;
-        document.getElementById('opp-img').src = a.img;
+        const oppImg = document.getElementById('opp-img');
+        if (oppImg.src !== a.img) {
+            oppImg.src = a.img;
+            oppImg.onerror = function() { 
+                this.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${Math.floor(Math.random()*150)+1}.png`; 
+            };
+        }
+
         updateHPBar('opp-hp-bar', a.hp, a.maxHp);
 
-        p.moves.forEach((m, i) => {
-            const btn = document.getElementById(`move-${i}`);
-            btn.innerHTML = `<span>${m.name}</span><span class="type-tag">${m.type}</span>`;
-            btn.onclick = () => {
-                sounds.button.currentTime = 0;
-                sounds.button.play().catch(() => {});
-                runTurn(m);
-            };
+        if (!state.mustSwitch) {
+            document.getElementById('controls').classList.remove('hidden');
+            document.getElementById('switch-menu').classList.add('hidden');
+            p.moves.forEach((m, i) => {
+                const btn = document.getElementById(`move-${i}`);
+                btn.innerHTML = `<span>${m.name}</span><span class="type-tag">${m.type}</span>`;
+                btn.onclick = (e) => {
+                    createRipple(e);
+                    sounds.button.currentTime = 0;
+                    sounds.button.play().catch(() => {});
+                    runTurn(m);
+                };
+            });
+        } else {
+            showSwitchMenu();
+        }
+    }
+
+    function showSwitchMenu() {
+        document.getElementById('controls').classList.add('hidden');
+        const menu = document.getElementById('switch-menu');
+        menu.classList.remove('hidden');
+        menu.innerHTML = '';
+
+        state.playerTeam.forEach((pkmn, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'switch-btn';
+            btn.disabled = pkmn.hp <= 0 || i === state.playerIdx;
+            btn.innerHTML = `
+                <img src="${pkmn.frontImg}" style="height: 30px; width: 30px; object-fit: contain; margin-bottom: 2px;">
+                <span>${pkmn.name}</span>
+                <span style="font-size:10px">${Math.ceil(pkmn.hp)} HP</span>
+            `;
+            btn.onclick = (e) => {
+                createRipple(e);
+                performSwitch(i);
+            }
+            menu.appendChild(btn);
         });
+    }
+
+    async function performSwitch(newIdx) {
+        state.playerIdx = newIdx;
+        state.mustSwitch = false;
+        addLog(`Go! **${state.playerTeam[state.playerIdx].name}**!`);
+        updateUI();
+        await sleep(600);
     }
 
     function updateHPBar(id, current, max) {
@@ -354,7 +607,7 @@
     }
 
     async function runTurn(pMove) {
-        if(state.busy) return;
+        if(state.busy || state.mustSwitch) return;
         state.busy = true;
 
         const p = state.playerTeam[state.playerIdx];
@@ -363,19 +616,35 @@
 
         if(p.spd >= a.spd) {
             await attack(p, a, pMove, 'opponent-active');
-            if(a.hp > 0) await attack(a, p, aMove, 'player-active');
+            if(a.hp > 0) {
+                await attack(a, p, aMove, 'player-active');
+            }
         } else {
             await attack(a, p, aMove, 'player-active');
-            if(p.hp > 0) await attack(p, a, pMove, 'opponent-active');
+            if(p.hp > 0) {
+                await attack(p, a, pMove, 'opponent-active');
+            }
         }
 
-        checkFaints();
+        await checkFaints();
         state.busy = false;
     }
 
     async function attack(atk, def, move, targetId) {
         addLog(`${atk.name} used **${move.name}**!`);
-        await sleep(600);
+        
+        // Visual effects
+        const attackerSlot = targetId === 'opponent-active' ? 'player-active' : 'opponent-active';
+        const attackerEl = document.getElementById(attackerSlot);
+        const targetEl = document.getElementById(targetId);
+        
+        if (move.power > 70) {
+            attackerEl.classList.add('atk-special');
+        } else {
+            attackerEl.classList.add(targetId === 'opponent-active' ? 'atk-tackle-player' : 'atk-tackle-opp');
+        }
+
+        await sleep(400);
 
         let dmg = (((2*50/5+2) * move.power * atk.atk / def.def) / 50) + 2;
         let mod = (Math.random() * (1 - 0.85) + 0.85);
@@ -386,11 +655,26 @@
 
         sounds.hit.currentTime = 0;
         sounds.hit.play().catch(() => {});
+        
+        // Spawn particles on target
+        const rect = targetEl.getBoundingClientRect();
+        const fieldRect = document.getElementById('battle-field').getBoundingClientRect();
+        ParticleSystem.spawn(
+            rect.left - fieldRect.left + (rect.width/2), 
+            rect.top - fieldRect.top + (rect.height/2), 
+            'impact', 
+            move.type
+        );
+
         showDamage(targetId, finalDmg);
         
         const imgId = targetId === 'opponent-active' ? 'opp-img' : 'player-img';
         document.getElementById(imgId).style.animation = 'shake 0.2s 2';
-        setTimeout(() => document.getElementById(imgId).style.animation = '', 400);
+        
+        setTimeout(() => {
+            attackerEl.classList.remove('atk-special', 'atk-tackle-player', 'atk-tackle-opp');
+            document.getElementById(imgId).style.animation = '';
+        }, 400);
         
         updateUI();
         await sleep(600);
@@ -407,24 +691,39 @@
         setTimeout(() => pop.remove(), 800);
     }
 
-    function checkFaints() {
+    async function checkFaints() {
         if(state.aiTeam[state.aiIdx].hp <= 0) {
             sounds.faint.currentTime = 0;
             sounds.faint.play().catch((e) => console.log("Faint sound error:", e));
             addLog(`Opponent's **${state.aiTeam[state.aiIdx].name}** fainted!`);
+            
+            await sleep(800);
             state.aiIdx++;
-            if(state.aiIdx >= 6) return end(true);
-            addLog(`Opponent sent out **${state.aiTeam[state.aiIdx].name}**!`);
+            
+            if(state.aiIdx >= 6) {
+                return end(true);
+            } else {
+                addLog(`Opponent sent out **${state.aiTeam[state.aiIdx].name}**!`);
+                updateUI();
+            }
         }
+        
         if(state.playerTeam[state.playerIdx].hp <= 0) {
             sounds.faint.currentTime = 0;
             sounds.faint.play().catch((e) => console.log("Faint sound error:", e));
             addLog(`**${state.playerTeam[state.playerIdx].name}** fainted!`);
-            state.playerIdx++;
-            if(state.playerIdx >= 6) return end(false);
-            addLog(`Go! **${state.playerTeam[state.playerIdx].name}**!`);
+            
+            await sleep(800);
+            
+            const canSwitch = state.playerTeam.some(pkmn => pkmn.hp > 0);
+            if(!canSwitch) {
+                return end(false);
+            } else {
+                state.mustSwitch = true;
+                addLog(`Choose another Pokémon!`);
+                updateUI();
+            }
         }
-        updateUI();
     }
 
     function end(win) {
@@ -438,16 +737,28 @@
         s.classList.remove('hidden');
         document.getElementById('result-title').innerText = win ? "VICTORY!" : "DEFEAT";
         document.getElementById('result-title').style.color = win ? "#2ecc71" : "#e74c3c";
+        document.getElementById('result-subtitle').innerText = win 
+            ? "You have defeated the opponent!" 
+            : "You are out of usable Pokémon...";
     }
 
     function addLog(msg) {
         const l = document.getElementById('log');
-        l.innerHTML = `<div>${msg.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')}</div>`; // Show only last action for mobile clarity
+        l.innerHTML = `<div>${msg.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')}</div>`;
         l.scrollTop = l.scrollHeight;
     }
 
     function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-    document.getElementById('btn-start').onclick = init;
+    
+    document.getElementById('btn-start-normal').onclick = (e) => {
+        createRipple(e);
+        init('normal');
+    };
+    
+    document.getElementById('btn-start-legendary').onclick = (e) => {
+        createRipple(e);
+        init('legendary');
+    };
 </script>
 </body>
 </html>
