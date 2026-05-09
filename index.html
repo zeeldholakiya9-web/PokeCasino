@@ -3,25 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PokéCasino Random Battle</title>
+    <title>PokeCasino Random Battle</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Poppins:wght@300;500;700&display=swap');
 
         :root {
-            --bg: #0f172a;
+            --bg: #020617;
             --card: rgba(255, 255, 255, 0.08);
             --border: rgba(255,255,255,0.1);
             --accent: #6366f1;
             --accent2: #22c55e;
+            --legendary: #f1c40f;
             --text: #e5e7eb;
             --hp-green: #22c55e;
             --hp-yellow: #f1c40f;
             --hp-red: #e74c3c;
+            --glass: rgba(15, 23, 42, 0.7);
         }
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: radial-gradient(circle at top, #1e293b, #020617);
+            background: var(--bg);
             margin: 0;
             display: flex;
             justify-content: center;
@@ -41,57 +43,241 @@
             backdrop-filter: blur(20px);
             position: relative;
             border: 1px solid var(--border);
+            background: #000;
         }
 
-        /* Screens */
-        #start-screen, #result-screen {
+        /* --- REDESIGNED START SCREEN --- */
+        #start-screen {
             position: absolute;
             inset: 0;
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(25px);
+            background: radial-gradient(circle at center, #1e1b4b 0%, #020617 100%);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            gap: 15px;
             z-index: 100;
-            text-align: center;
-            padding: 20px;
-        }
-
-        /* Title */
-        h1 {
-            font-size: 38px;
-            font-weight: 700;
-            background: linear-gradient(90deg, #6366f1, #22c55e);
-            -webkit-background-clip: text;
-            color: transparent;
-            margin: 0;
-        }
-
-        /* Buttons */
-        .btn-main {
-            padding: 14px 28px;
-            border-radius: 14px;
-            border: none;
-            background: linear-gradient(135deg, #6366f1, #4f46e5);
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            text-transform: uppercase;
-            position: relative;
             overflow: hidden;
-            width: 80%;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s ease;
         }
 
-        .btn-main:hover {
-            transform: scale(1.05);
+        #start-screen.fade-out {
+            opacity: 0;
+            transform: scale(1.1);
+            pointer-events: none;
         }
 
-        .btn-gold {
-            background: linear-gradient(135deg, #f1c40f, #d35400);
+        /* Transition Overlay */
+        #transition-overlay {
+            position: absolute;
+            inset: 0;
+            background: white;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease-in-out;
         }
+
+        #transition-overlay.active {
+            opacity: 1;
+        }
+
+        /* Animated Background Particles */
+        .bg-particles {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .particle-dot {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.3;
+            filter: blur(1px);
+            animation: floatParticle var(--d) infinite linear;
+        }
+
+        @keyframes floatParticle {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            50% { opacity: 0.5; }
+            100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+        }
+
+        /* Floating Silhouettes */
+        .silhouette {
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            filter: brightness(0) invert(1) blur(2px);
+            opacity: 0.05;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .s-1 { top: 10%; left: -20px; animation: floatSide 12s infinite ease-in-out; }
+        .s-2 { bottom: 15%; right: -30px; animation: floatSide 15s infinite ease-in-out reverse; }
+
+        @keyframes floatSide {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(20px, 30px) rotate(10deg); }
+        }
+
+        /* Economy UI */
+        .economy-bar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .eco-card {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Blur Box Main Card */
+        .main-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 32px;
+            padding: 40px 20px;
+            width: 85%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 5;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Hero Title Section */
+        .hero-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .hero-title {
+            font-family: 'Syncopate', sans-serif;
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin: 0;
+            background: linear-gradient(to bottom, #fff 30%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.4));
+        }
+
+        .hero-subtitle {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        /* Menu Buttons */
+        .menu-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .btn-game {
+            position: relative;
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-game:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-game:active { transform: scale(0.98); }
+
+        /* Loading State */
+        #loading-msg {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .pokeball-spinner {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid #333;
+            position: relative;
+            background: linear-gradient(to bottom, #ef4444 50%, #fff 50%);
+            animation: spin 1s linear infinite;
+            overflow: hidden;
+        }
+
+        /* Center Line (Belt) */
+        .pokeball-spinner::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: #333;
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+
+        /* Center Button */
+        .pokeball-spinner::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border: 3px solid #333;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* --- END START SCREEN REDESIGN --- */
 
         /* Battlefield */
         #battle-field {
@@ -134,7 +320,6 @@
             color: var(--text);
             margin-top: 6px;
             width: 140px;
-            /* Fix for blur removal during animations */
             transform: translateZ(0);
             will-change: backdrop-filter;
         }
@@ -295,24 +480,74 @@
             40%, 80% { transform: translateX(8px); }
         }
 
-        .title-animate { animation: pulse 2s infinite ease-in-out; }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+        #result-screen {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(25px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            z-index: 100;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .btn-main {
+            padding: 14px 28px;
+            border-radius: 14px;
+            border: none;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+            width: 80%;
         }
     </style>
 </head>
 <body>
 
 <div id="game-container">
+    <div id="transition-overlay"></div>
     <div id="start-screen">
-        <h1 class="title-animate">PokéCasino</h1>
-        <p style="opacity:0.6;">Select Your Battle Mode</p>
-        <button id="btn-start-normal" class="btn-main">Non-Legendary</button>
-        <button id="btn-start-legendary" class="btn-main btn-gold">Legendary Mode</button>
-        <p id="loading-msg" class="hidden" style="color: #6366f1; font-weight: bold;">Summoning Pokémon...</p>
-        <p style="position: absolute; bottom: 20px; font-size: 10px; color: #666;">© 2026 POKÉCASINO ENGINE</p>
+        <div class="bg-particles" id="bg-particles"></div>
+        
+        <img src="https://play.pokemonshowdown.com/sprites/ani/lucario.gif" class="silhouette s-1">
+        <img src="https://play.pokemonshowdown.com/sprites/ani/rayquaza.gif" class="silhouette s-2">
+
+        <div class="economy-bar">
+            <div class="eco-card"><span>💰</span> 12,500</div>
+            <div class="eco-card"><span>🔥</span> Streak: 3</div>
+        </div>
+
+        <div class="main-card">
+            <div class="hero-section">
+                <h1 class="hero-title">POKECASINO</h1>
+                <div class="hero-subtitle">RISK IT. BATTLE IT.</div>
+            </div>
+
+            <div class="menu-options" id="menu-options">
+                <button id="btn-start-normal" class="btn-game">
+                    <span>🎮</span> NON LEGENDARY MODE
+                </button>
+                <button id="btn-start-legendary" class="btn-game">
+                    <span>👑</span> LEGENDARY MODE
+                </button>
+            </div>
+
+            <div id="loading-msg" class="hidden">
+                <div class="pokeball-spinner"></div>
+                <p style="color: #fff; font-size: 10px; letter-spacing: 2px; font-family: 'Syncopate'; margin-top: 15px;">Summoning Pokémon...</p>
+            </div>
+        </div>
+
+        <p style="position: absolute; bottom: 20px; font-size: 9px; color: rgba(255,255,255,0.3); letter-spacing: 1px;">© 2026 POKÉCASINO ENGINE • v2.0</p>
     </div>
 
     <div id="battle-field">
@@ -342,8 +577,7 @@
             <button class="move-btn" id="move-2"></button>
             <button class="move-btn" id="move-3"></button>
         </div>
-        <div id="switch-menu" class="hidden">
-            </div>
+        <div id="switch-menu" class="hidden"></div>
     </div>
 
     <div id="result-screen" class="hidden">
@@ -354,12 +588,26 @@
 </div>
 
 <script>
+    // Create Background Particles
+    const particleContainer = document.getElementById('bg-particles');
+    for (let i = 0; i < 30; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle-dot';
+        const size = Math.random() * 4 + 2;
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.setProperty('--d', (Math.random() * 5 + 3) + 's');
+        p.style.animationDelay = Math.random() * 5 + 's';
+        particleContainer.appendChild(p);
+    }
+
     const state = {
         playerTeam: [], aiTeam: [],
         playerIdx: 0, aiIdx: 0,
         busy: false,
         mustSwitch: false,
-        mode: 'normal' // 'normal' or 'legendary'
+        mode: 'normal'
     };
 
     const sounds = {
@@ -372,7 +620,6 @@
 
     sounds.battleMusic.loop = true;
 
-    // Particle System for move animations
     const ParticleSystem = {
         colors: {
             fire: '#ff4400', water: '#3498db', grass: '#2ecc71', electric: '#f1c40f',
@@ -385,7 +632,6 @@
                 const p = document.createElement('div');
                 p.className = 'particle';
                 const c = this.colors[color] || '#ffffff';
-                
                 const size = Math.random() * 6 + 4;
                 p.style.width = size + 'px';
                 p.style.height = size + 'px';
@@ -393,14 +639,11 @@
                 p.style.left = x + 'px';
                 p.style.top = y + 'px';
                 p.style.boxShadow = `0 0 10px ${c}`;
-                
                 container.appendChild(p);
-
                 const angle = Math.random() * Math.PI * 2;
                 const velocity = Math.random() * 8 + 4;
                 const vx = Math.cos(angle) * velocity;
                 const vy = Math.sin(angle) * velocity;
-
                 let op = 1;
                 const animate = () => {
                     const curX = parseFloat(p.style.left);
@@ -417,18 +660,14 @@
         }
     };
 
-    // Ripple effect function
     function createRipple(event) {
         const button = event.currentTarget;
         const circle = document.createElement("span");
         const diameter = Math.max(button.clientWidth, button.clientHeight);
-        const radius = diameter / 2;
-
         circle.style.width = circle.style.height = `${diameter}px`;
         circle.style.left = `${event.clientX - button.getBoundingClientRect().left}px`;
         circle.style.top = `${event.clientY - button.getBoundingClientRect().top}px`;
         circle.classList.add("ripple");
-
         const ripple = button.getElementsByClassName("ripple")[0];
         if (ripple) { ripple.remove(); }
         button.appendChild(circle);
@@ -443,15 +682,26 @@
             }).catch(() => {});
         }
 
-        document.getElementById('btn-start-normal').classList.add('hidden');
-        document.getElementById('btn-start-legendary').classList.add('hidden');
+        // ENTRY ANIMATION
+        document.getElementById('menu-options').classList.add('hidden');
         document.getElementById('loading-msg').classList.remove('hidden');
         
         state.playerTeam = await getTeam(true);
         state.aiTeam = await getTeam(false);
         
-        document.getElementById('start-screen').classList.add('hidden');
-        document.getElementById('battle-field').style.display = 'block';
+        // FADE IN OVERLAY
+        const overlay = document.getElementById('transition-overlay');
+        overlay.classList.add('active');
+        await sleep(400);
+
+        document.getElementById('start-screen').classList.add('fade-out');
+        setTimeout(() => {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('battle-field').style.display = 'block';
+            
+            // FADE OUT OVERLAY
+            overlay.classList.remove('active');
+        }, 800);
 
         sounds.battleMusic.volume = 0.3;
         sounds.battleMusic.play().catch(e => console.log("Music play error:", e));
@@ -464,35 +714,23 @@
         const team = [];
         while(team.length < 6) {
             const id = Math.floor(Math.random() * 649) + 1;
-            
             const speciesRes = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`);
             const speciesData = await speciesRes.json();
-            
             const isLegendary = speciesData.is_legendary || speciesData.is_mythical;
-            
-            // Filter based on mode
             if (state.mode === 'legendary' && !isLegendary) continue;
             if (state.mode === 'normal' && isLegendary) continue;
-
             const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
             const data = await res.json();
-            
             const hp = data.stats[0].base_stat * 2 + 110;
             let spriteName = data.name.toLowerCase();
-            if (spriteName.includes('-')) {
-                spriteName = spriteName.split('-')[0];
-            }
-
-            // Fetch move details
+            if (spriteName.includes('-')) { spriteName = spriteName.split('-')[0]; }
             const moveList = [];
             const movePromises = data.moves
                 .sort(() => 0.5 - Math.random())
                 .slice(0, 15)
                 .map(m => fetch(m.move.url).then(r => r.json()));
-            
             const moveDetails = await Promise.all(movePromises);
             const filteredMoves = moveDetails.filter(m => m.power !== null).slice(0, 4);
-            
             filteredMoves.forEach(m => {
                 moveList.push({
                     name: m.name.toUpperCase().replace('-', ' '),
@@ -500,11 +738,7 @@
                     type: m.type.name
                 });
             });
-
-            while(moveList.length < 4) {
-                moveList.push({ name: 'TACKLE', power: 40, type: 'normal' });
-            }
-
+            while(moveList.length < 4) { moveList.push({ name: 'TACKLE', power: 40, type: 'normal' }); }
             team.push({
                 name: data.name.toUpperCase(),
                 maxHp: hp, hp: hp,
@@ -523,10 +757,8 @@
     function updateUI() {
         const p = state.playerTeam[state.playerIdx];
         const a = state.aiTeam[state.aiIdx];
-
         document.getElementById('player-name').innerText = p.name;
         document.getElementById('player-hp-num').innerText = `${Math.ceil(p.hp)}/${p.maxHp}`;
-        
         const playerImg = document.getElementById('player-img');
         if (playerImg.src !== p.img) {
             playerImg.src = p.img;
@@ -534,9 +766,7 @@
                 this.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${Math.floor(Math.random()*150)+1}.png`; 
             };
         }
-
         updateHPBar('player-hp-bar', p.hp, p.maxHp);
-        
         document.getElementById('opp-name').innerText = a.name;
         const oppImg = document.getElementById('opp-img');
         if (oppImg.src !== a.img) {
@@ -545,9 +775,7 @@
                 this.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${Math.floor(Math.random()*150)+1}.png`; 
             };
         }
-
         updateHPBar('opp-hp-bar', a.hp, a.maxHp);
-
         if (!state.mustSwitch) {
             document.getElementById('controls').classList.remove('hidden');
             document.getElementById('switch-menu').classList.add('hidden');
@@ -571,7 +799,6 @@
         const menu = document.getElementById('switch-menu');
         menu.classList.remove('hidden');
         menu.innerHTML = '';
-
         state.playerTeam.forEach((pkmn, i) => {
             const btn = document.createElement('button');
             btn.className = 'switch-btn';
@@ -609,54 +836,38 @@
     async function runTurn(pMove) {
         if(state.busy || state.mustSwitch) return;
         state.busy = true;
-
         const p = state.playerTeam[state.playerIdx];
         const a = state.aiTeam[state.aiIdx];
         const aMove = a.moves[Math.floor(Math.random()*4)];
-
         if(p.spd >= a.spd) {
             await attack(p, a, pMove, 'opponent-active');
-            if(a.hp > 0) {
-                await attack(a, p, aMove, 'player-active');
-            }
+            if(a.hp > 0) { await attack(a, p, aMove, 'player-active'); }
         } else {
             await attack(a, p, aMove, 'player-active');
-            if(p.hp > 0) {
-                await attack(p, a, pMove, 'opponent-active');
-            }
+            if(p.hp > 0) { await attack(p, a, pMove, 'opponent-active'); }
         }
-
         await checkFaints();
         state.busy = false;
     }
 
     async function attack(atk, def, move, targetId) {
         addLog(`${atk.name} used **${move.name}**!`);
-        
-        // Visual effects
         const attackerSlot = targetId === 'opponent-active' ? 'player-active' : 'opponent-active';
         const attackerEl = document.getElementById(attackerSlot);
         const targetEl = document.getElementById(targetId);
-        
         if (move.power > 70) {
             attackerEl.classList.add('atk-special');
         } else {
             attackerEl.classList.add(targetId === 'opponent-active' ? 'atk-tackle-player' : 'atk-tackle-opp');
         }
-
         await sleep(400);
-
         let dmg = (((2*50/5+2) * move.power * atk.atk / def.def) / 50) + 2;
         let mod = (Math.random() * (1 - 0.85) + 0.85);
         if(atk.types.includes(move.type)) mod *= 1.5;
-        
         const finalDmg = Math.floor(dmg * mod);
         def.hp = Math.max(0, def.hp - finalDmg);
-
         sounds.hit.currentTime = 0;
         sounds.hit.play().catch(() => {});
-        
-        // Spawn particles on target
         const rect = targetEl.getBoundingClientRect();
         const fieldRect = document.getElementById('battle-field').getBoundingClientRect();
         ParticleSystem.spawn(
@@ -665,17 +876,13 @@
             'impact', 
             move.type
         );
-
         showDamage(targetId, finalDmg);
-        
         const imgId = targetId === 'opponent-active' ? 'opp-img' : 'player-img';
         document.getElementById(imgId).style.animation = 'shake 0.2s 2';
-        
         setTimeout(() => {
             attackerEl.classList.remove('atk-special', 'atk-tackle-player', 'atk-tackle-opp');
             document.getElementById(imgId).style.animation = '';
         }, 400);
-        
         updateUI();
         await sleep(600);
     }
@@ -696,29 +903,22 @@
             sounds.faint.currentTime = 0;
             sounds.faint.play().catch((e) => console.log("Faint sound error:", e));
             addLog(`Opponent's **${state.aiTeam[state.aiIdx].name}** fainted!`);
-            
             await sleep(800);
             state.aiIdx++;
-            
-            if(state.aiIdx >= 6) {
-                return end(true);
-            } else {
+            if(state.aiIdx >= 6) { return end(true); } 
+            else {
                 addLog(`Opponent sent out **${state.aiTeam[state.aiIdx].name}**!`);
                 updateUI();
             }
         }
-        
         if(state.playerTeam[state.playerIdx].hp <= 0) {
             sounds.faint.currentTime = 0;
             sounds.faint.play().catch((e) => console.log("Faint sound error:", e));
             addLog(`**${state.playerTeam[state.playerIdx].name}** fainted!`);
-            
             await sleep(800);
-            
             const canSwitch = state.playerTeam.some(pkmn => pkmn.hp > 0);
-            if(!canSwitch) {
-                return end(false);
-            } else {
+            if(!canSwitch) { return end(false); } 
+            else {
                 state.mustSwitch = true;
                 addLog(`Choose another Pokémon!`);
                 updateUI();
@@ -732,14 +932,11 @@
             sounds.victoryMusic.volume = 0.3;
             sounds.victoryMusic.play().catch(e => console.log("Victory music error:", e));
         }
-
         const s = document.getElementById('result-screen');
         s.classList.remove('hidden');
         document.getElementById('result-title').innerText = win ? "VICTORY!" : "DEFEAT";
         document.getElementById('result-title').style.color = win ? "#2ecc71" : "#e74c3c";
-        document.getElementById('result-subtitle').innerText = win 
-            ? "You have defeated the opponent!" 
-            : "You are out of usable Pokémon...";
+        document.getElementById('result-subtitle').innerText = win ? "You have defeated the opponent!" : "You are out of usable Pokémon...";
     }
 
     function addLog(msg) {
@@ -754,7 +951,6 @@
         createRipple(e);
         init('normal');
     };
-    
     document.getElementById('btn-start-legendary').onclick = (e) => {
         createRipple(e);
         init('legendary');
